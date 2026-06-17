@@ -190,7 +190,26 @@ python exploits/03_no_expiry.py
 
 ### Output
 
-*(Coming soon)*
+```
+============================================================
+ATTACK 3 - No expiry validation
+============================================================
+
+[1] Logging in via /login-no-expiry...
+    Token received: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c...
+
+[2] Token payload: {'sub': 'user', 'role': 'user'}
+    Note: no 'exp' field - this token never expires
+
+[3] Sending token to /vuln/no-expiry...
+
+[4] Server response: {'message': 'Welcome, user! Your role is: user', 'payload': {'sub': 'user', 'role': 'user'}}
+
+[!] ATTACK SUCCESSFUL - Server accepted a token with no expiry
+    This token will remain valid forever - even if the user logs out
+```
+
+> **Variant B - expired token replay:** There is a second form of this vulnerability where the server does issue tokens with an `exp` claim, but never checks it during verification. In that case, an attacker who knows the signing secret (see Attack 4) can forge a token with an `exp` set in the past and the server will still accept it. These two attacks chain naturally: crack the secret with Attack 4, then forge an expired token with any payload and any expiry date.
 
 ---
 

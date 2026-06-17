@@ -54,6 +54,25 @@ def login(data: LoginRequest):
     token = jwt.encode(payload, WEAK_SECRET, algorithm="HS256")
     return {"token": token}
 
+# --- Vulnerable login for exploit 03 ---
+
+@app.post("/login-no-expiry")
+def login_no_expiry(data: LoginRequest):
+    """
+    Vulnerable login endpoint for attack 3.
+    Issues a token without an exp claim - the token never expires.
+    """
+    if data.username != "user" or data.password != "password":
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    payload = {
+        "sub": data.username,
+        "role": "user",
+        # No exp claim - this token is valid forever
+    }
+    token = jwt.encode(payload, WEAK_SECRET, algorithm="HS256")
+    return {"token": token}
+
 # --- Vulnerable endpoints ---
 
 @app.get("/vuln/no-verify")
