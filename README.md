@@ -9,6 +9,23 @@
 
 ---
 
+## Contents
+
+- [What is this?](#what-is-this)
+- [Why JWTs matter](#why-jwts-matter)
+- [Prerequisites](#prerequisites)
+- [Vulnerabilities covered](#vulnerabilities-covered)
+- [Attack 1 — Missing signature verification](#attack-1---missing-signature-verification)
+- [Attack 2 — `alg=none`](#attack-2---algnone)
+- [Attack 3 — No expiry validation](#attack-3---no-expiry-validation)
+- [Attack 4 — Weak secret brute force](#attack-4---weak-secret-brute-force)
+- [Attack 5 — Algorithm confusion (RS256 to HS256)](#attack-5---algorithm-confusion-rs256-to-hs256)
+- [Defense summary](#defense-summary)
+- [The five golden rules](#the-five-golden-rules)
+- [Author](#author)
+
+---
+
 ## What is this?
 
 A hands-on security toolkit that demonstrates the most common JWT (JSON Web Token) vulnerabilities - and how to defend against them.
@@ -41,8 +58,8 @@ These are not theoretical vulnerabilities, they appear regularly in real-world p
 - A virtual environment (recommended)
 
 ```bash
-git clone https://github.com/joandies/jwt-security-lab.git
-cd jwt-security-lab
+git clone https://github.com/joandies/jwt-lab.git
+cd jwt-lab
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -334,6 +351,26 @@ ATTACK 5 - Algorithm confusion (RS256 to HS256)
 >
 > **The conceptual vulnerability is real.** In older versions of PyJWT (before 2.4.0), node's `jsonwebtoken`, and other JWT libraries, this attack worked end-to-end without any workarounds. The fix was precisely to add the RSA key detection that blocks this. The lab demonstrates the mechanism accurately - only the enforcement layer differs from a pre-fix environment.
 
+## Are these vulnerabilities realistic?
+
+A fair question. No competent developer intentionally puts `verify_signature: False` in production or adds `"none"` to their algorithm list. So why does this lab exist?
+
+Because in practice, these vulnerabilities appear in three ways:
+
+**Legacy code and older library versions.**
+Before PyJWT 2.x, the default behavior was far more permissive. `alg=none` was accepted without any special configuration. Other languages and frameworks have similar histories - Node's `jsonwebtoken`, PHP libraries, Java's `jjwt` - each has had versions where these behaviors were either the default or easy to accidentally enable. There are production systems running today on library versions that predate these protections.
+
+**The development shortcut that reaches production.**
+This is the most common real-world case. A developer disables signature verification locally to avoid generating valid tokens during testing. The change gets committed, passes code review because nobody searches for that specific option, and reaches production. Bug bounty reports are full of exactly this pattern.
+
+**Misconfiguration under complexity.**
+In large codebases with multiple teams, JWT validation logic gets abstracted, wrapped, and reused. A `verify_exp: False` added for a specific internal service ends up in a shared middleware used everywhere. Nobody notices because the tests pass, they just never tested with an expired token.
+
+**Attack 5 (algorithm confusion) is the exception.**
+This one is not obvious at all and appears in well-maintained systems. Accepting both RS256 and HS256 can seem reasonable - "we support both for flexibility" - without the developer realizing it opens this attack vector. This vulnerability has appeared in real-world penetration tests and CVEs against production systems.
+
+The goal of this lab is not to say "developers are careless". It is to build the habit of understanding why each validation option exists, so you never disable one without knowing exactly what you are giving up.
+
 ---
 
 ## Defense summary
@@ -379,6 +416,18 @@ If multiple services need to verify tokens, RS256 lets you share the public key 
 
 ---
 
+## Roadmap
+
+Planned for future iterations:
+
+- **JWT `kid` header injection** — manipulating the `kid` header to point the verifier to an attacker-controlled key.
+- **JWKS confusion** — abusing dynamic JWKS endpoints to inject malicious keys.
+- **Token replay protection** — demonstrating attacks against systems without `jti` or nonce tracking.
+- **Refresh token vulnerabilities** — common flaws in refresh token rotation.
+
+Contributions and suggestions welcome via issues.
+
+---
 ## Author
 
 Joan Díes - Security Engineer  
