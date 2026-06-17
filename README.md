@@ -338,7 +338,44 @@ ATTACK 5 - Algorithm confusion (RS256 to HS256)
 
 ## Defense summary
 
-*(Coming soon - a consolidated table of all fixes once all attacks are implemented)*
+All five defenses are applied together in [`defenses/secure_service.py`](defenses/secure_service.py) as a single correct JWT validation pattern. Security is not about fixing one thing, it's about applying all the rules at once.
+
+| # | Attack | Root cause | Fix |
+|---|--------|------------|-----|
+| 1 | Missing signature verification | `verify_signature: False` in decode call | Remove the option entirely - PyJWT verifies by default |
+| 2 | `alg=none` | Server accepts `none` as a valid algorithm | Whitelist only the algorithm you use, never include `none` |
+| 3 | No expiry validation | `verify_exp: False` or missing `exp` claim | Always include `exp` when issuing tokens, never disable `verify_exp` |
+| 4 | Weak secret brute force | Hardcoded weak secret (`"secret"`) | Use `secrets.token_hex(32)` - never hardcode secrets in source code |
+| 5 | Algorithm confusion | Server accepts both RS256 and HS256 | Enforce a single algorithm server-side - the server decides, not the token |
+
+### The correct validation pattern
+
+```python
+payload = jwt.decode(
+    token,
+    STRONG_SECRET,        # defense 4 - strong secret, never hardcoded
+    algorithms=["HS256"]  # defenses 2 and 5 - explicit whitelist, single algorithm
+    # defense 1 - no verify_signature override, full verification by default
+    # defense 3 - no verify_exp override, expiry checked by default
+)
+```
+
+### The five golden rules
+
+**1. The server decides the algorithm, not the token.**
+Never read the `alg` field from the token header to decide how to verify it. Hardcode the expected algorithm on the server side. If you expect HS256, only accept HS256.
+
+**2. Always verify the signature.**
+Decoding and verifying are different operations. A decoded token tells you nothing without signature verification. Never use `verify_signature: False` outside of debugging.
+
+**3. Always validate `exp`.**
+Tokens without expiry are sessions that never end. Always include `exp` when issuing tokens. Short expiry windows (15-30 minutes) limit the damage of a stolen token significantly.
+
+**4. Never hardcode secrets.**
+Use `secrets.token_hex(32)` or equivalent at minimum. In production, load secrets from environment variables or a secrets manager (AWS Secrets Manager, HashiCorp Vault). Rotate secrets periodically.
+
+**5. Use asymmetric keys (RS256) for distributed systems.**
+If multiple services need to verify tokens, RS256 lets you share the public key without exposing the signing secret. But enforce RS256 exclusively - never allow HS256 as a fallback, as that opens the door to algorithm confusion.
 
 ---
 
