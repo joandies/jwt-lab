@@ -20,8 +20,10 @@
 - [Attack 3 — No expiry validation](#attack-3---no-expiry-validation)
 - [Attack 4 — Weak secret brute force](#attack-4---weak-secret-brute-force)
 - [Attack 5 — Algorithm confusion (RS256 to HS256)](#attack-5---algorithm-confusion-rs256-to-hs256)
+- [Demo](#demo)
 - [Defense summary](#defense-summary)
 - [The five golden rules](#the-five-golden-rules)
+- [Roadmap](#roadmap)
 - [Author](#author)
 
 ---
@@ -372,6 +374,13 @@ This one is not obvious at all and appears in well-maintained systems. Accepting
 The goal of this lab is not to say "developers are careless". It is to build the habit of understanding why each validation option exists, so you never disable one without knowing exactly what you are giving up.
 
 ---
+## Demo
+
+Watch the algorithm confusion attack (RS256 → HS256) in action: the most technically sophisticated vulnerability in this lab.
+
+[![asciicast](https://asciinema.org/a/cEdGlEfU4QFgR6uR.svg)](https://asciinema.org/a/cEdGlEfU4QFgR6uR)
+
+The demo runs the same attack documented in [Attack 5](#attack-5---algorithm-confusion-rs256-to-hs256), with narrated steps and slower pacing for clarity.
 
 ## Defense summary
 
